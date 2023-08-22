@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+    body {
+        font-family: "Lucida Console", Monaco, monospace;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        background-color: #292626;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 135vh;
+    }
+
+    h1 {
+        margin-top: 20px;
+        font-size: 36px;
+        color: white;
+    }
+
+    .game-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .color-button {
+        width: 200px;
+        height: 200px;
+        cursor: pointer;
+        border-radius: 50%;
+        transition: background-color 0.3s ease;
+    }
+
+    .outer-circle {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .green {
+        background-color: green;
+    }
+
+    .red {
+        background-color: red;
+    }
+
+    .blue {
+        background-color: blue;
+    }
+
+    .yellow {
+        background-color: yellow;
+    }
+
+    .color-button.fade {
+        filter: brightness(0.7);
+    }
+
+    button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    p {
+        color: white;
+    }
+
+    #combination-count {
+        font-weight: bold;
+        font-size: 24px;
+        margin: 10px;
+        color: floralwhite;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 20%;
+        float: right;
+        background-color: #f2f2f2;
+        color: black;
+        margin-top: 10px;
+        margin-right: 10px;
+    }
+
+    th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+    h2{
+        color: white;
+    }
+</style>
+    <title>Simon</title>
+</head>
+<body>
+    <h1>Simon</h1>
+    <div class="game-container">
+        <div class="color-button green" data-color="green"></div>
+        <div class="color-button red" data-color="red"></div>
+        <div class="color-button blue" data-color="blue"></div>
+        <div class="color-button yellow" data-color="yellow"></div>
+    </div>
+    <div class="outer-circle">
+        <button id="start-button">Inicio</button>
+        <p>Combinaciones: <span id="combination-count">0</span></p>
+    </div>
+    <h2>Puntuación de Jugadores</h2>
+    <table>
+        <tr>
+            <th>Jugador</th>
+            <th>Puntuación</th>
+        </tr>
+        <tr>
+            <td>Jugador 1</td>
+            <td id="jugador1">0</td>
+        </tr>
+        <tr>
+            <td>Jugador 2</td>
+            <td id="jugador2">0</td>
+        </tr>
+        <tr>
+            <td>Jugador 3</td>
+            <td id="jugador3">0</td>
+        </tr>
+        <tr>
+            <td>Jugador 4</td>
+            <td id="jugador4">0</td>
+        </tr>
+    </table>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const colorButtons = document.querySelectorAll('.color-button');
+            const startButton = document.getElementById('start-button');
+            const combinationCountDisplay = document.getElementById('combination-count');
+
+            const colors = ['green', 'red', 'blue', 'yellow'];
+            const sequence = [];
+            let playerSequence = [];
+            let isPlayerTurn = false;
+            let sequenceIndex = 0;
+            let combinationCount = 0;
+
+            startButton.addEventListener('click', startGame);
+
+            colorButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (isPlayerTurn) {
+                        const clickedColor = button.dataset.color;
+                        playerSequence.push(clickedColor);
+                        highlightPlayerMove(button);
+                        checkPlayerInput();
+                    }
+                });
+            });
+
+            function highlightPlayerMove(button) {
+                button.classList.add('highlight');
+                setTimeout(() => {
+                    button.classList.remove('highlight');
+                }, 300);
+            }
+
+            function startGame() {
+                sequence.length = 0;
+                playerSequence.length = 0;
+                sequenceIndex = 0;
+                combinationCount = 0;
+                combinationCountDisplay.textContent = combinationCount;
+                addToSequence();
+                playSequence();
+            }
+
+            function addToSequence() {
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                sequence.push(randomColor);
+            }
+
+            function playSequence() {
+                isPlayerTurn = false;
+                let i = 0;
+
+                function highlightColor() {
+                    if (i < sequence.length) {
+                        const color = sequence[i];
+                        const button = document.querySelector(`.${color}`);
+                        button.classList.add('highlight', 'fade');
+                        setTimeout(() => {
+                            button.classList.remove('highlight', 'fade');
+                            i++;
+                            setTimeout(highlightColor, 500);
+                        }, 1000);
+                    } else {
+                        isPlayerTurn = true;
+                    }
+                }
+
+                highlightColor();
+            }
+
+            function checkPlayerInput() {
+                const clickedColor = playerSequence[playerSequence.length - 1];
+                const correctColor = sequence[playerSequence.length - 1];
+
+                if (clickedColor === correctColor) {
+                    if (playerSequence.length === sequence.length) {
+                        playerSequence = [];
+                        isPlayerTurn = false;
+                        combinationCount++;
+
+                        // Actualizar puntaje en la tabla
+                        document.getElementById("jugador1").textContent = combinationCount;
+
+                        combinationCountDisplay.textContent = combinationCount;
+                        setTimeout(() => {
+                            addToSequence();
+                            playSequence();
+                        }, 1000);
+                    }
+                } else {
+                    alert(`Juego Terminado. Combinaciones logradas: ${combinationCount}. Prueba Otra Vez`);
+                    startGame();
+                }
+            };
+        });
+    </script>
+</body>
+</html>
